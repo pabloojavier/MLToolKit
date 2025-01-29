@@ -1,0 +1,13 @@
+*.pyc
+CREDENTIALS.py
+MLToolKit.egg-info
+__pycache__
+*.parquet
+*.html
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.log
+*.xlsx
+*.DS_store
