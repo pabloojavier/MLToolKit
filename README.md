@@ -26,7 +26,7 @@ Para utilizar las herramientas se deben configurar unos parámetros, por ejemplo
 ```python
 parametros = {
   'xgboost_params' : {"random_state": 42, "max_depth": 2},
-  'experiment_name' : <ruta_completa_a_tu_carpeta_de_desarrollo>,
+  'experiment_name' : ruta_completa_a_tu_carpeta_de_desarrollo,
   'databricks' : True,
   'nombre_reporte' : 'variables_test',
   'target_name' : 'target',
