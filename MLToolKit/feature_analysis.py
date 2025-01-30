@@ -3,13 +3,13 @@ import os
 from .univariate import univariateIV, xgboost_analysis
 from .utils.utils import merge_sets
 from .stability import stability_stat, dynamic_csi_stat, get_features_with_low_variability
+from typing import List,Any,Dict,Tuple
 
 class FeatureAnalysis:
     def __init__(
-
-            self, 
+            self,
             df : pd.DataFrame,
-            params : dict
+            params : dict[str, Any]
     ):
         """
         Initializes the feature analysis with the given dataframe and parameters.
@@ -100,8 +100,11 @@ class FeatureAnalysis:
 
     def univariado(self)->pd.DataFrame:
         """
-        Perform the univariate analysis and return the results in a dataframe.
+        Perform the univariate analysis, with metrics such as IV, KS, ROC and AUCPR.
 
+        Outputs
+        -------
+            pd.DataFrame
         """
         df_univ = univariateIV(
             self.df, 
@@ -134,7 +137,7 @@ class FeatureAnalysis:
         self.dict_runs['univariado'] = True
         return self.df_univ
 
-    def estabilidad(self):
+    def estabilidad(self) -> Dict[str, pd.DataFrame]:
         """
         Perform the stability analysis and return the results in a dictionary.
 
@@ -179,7 +182,17 @@ class FeatureAnalysis:
         }
         return dict_to_return
     
-    def correlacion_por_metrica(self):
+    def correlacion_por_metrica(self)->Tuple[Dict[str,List[str]],List[str]]:
+        """
+        Perform the correlation analysis and return the selected and discarded features.
+
+        Outputs
+        -------
+        Tuple
+            A tuple containing:
+            * A dictionary containing the selected features for each family.
+            * A list of discarded features.
+        """
         if self.dict_runs['univariado'] == False:
             print("No se ha ejecutado el análisis univariado. Ejecute FeatureAnalysis.univariado()")
             return None,None
