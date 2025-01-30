@@ -2,14 +2,14 @@ import pandas as pd
 import os
 from .univariate import univariateIV, xgboost_analysis
 from .utils.utils import merge_sets
-from .stability import stability_stat, dynamic_csi_stat, get_features_with_low_variability
+from .stability import stability_stat, csi_stat, get_features_with_low_variability
 from typing import List,Any,Dict,Tuple
 
 class FeatureAnalysis:
     def __init__(
             self,
             df : pd.DataFrame,
-            params : dict[str, Any]
+            params : Dict[str, Any]
     ):
         """
         Initializes the feature analysis with the given dataframe and parameters.
@@ -71,6 +71,7 @@ class FeatureAnalysis:
         assert 'target_name' in params.keys(), "El parámetro 'target_name' debe estar presente en los parámetros."
         assert 'cliente_id' in params.keys(), "El parámetro 'cliente_id' debe estar presente en los parámetros."
         assert 'periodo_id' in params.keys(), "El parámetro 'periodo_id' debe estar presente en los parámetros."
+        assert pd.api.types.is_datetime64_any_dtype(df[params['periodo_id']]), f"La columna {params['periodo_id']} debe ser de tipo datetime. Ejecutar df['{params['periodo_id']}'] = pd.to_datetime(df['{params['periodo_id']}'])"
         assert all(col in df.columns for col in [params['target_name'], params['cliente_id'], params['periodo_id']]), f"Las columnas {params['target_name']}, {params['cliente_id']} y {params['periodo_id']} deben estar presentes en el dataframe."
 
         self.params = params
@@ -81,7 +82,8 @@ class FeatureAnalysis:
             'fill_na': -9e8,
             'threshold_correlation': 0.5,
             'correlation_method': 'pearson',
-            'correlation_metric': 'ks'
+            'correlation_metric': 'ks',
+            'training_period' : None
         }
         for key, value in default_params.items():
             if key not in self.params:
@@ -153,7 +155,9 @@ class FeatureAnalysis:
             * nulls: A dataframe containing the percentage of nulls of each feature.
         """
         self.df_stability = stability_stat(self.df,self.params['periodo_id'],self.params['features'])
-        self.df_dynamic_csi = dynamic_csi_stat(self.df,self.params['periodo_id'],self.params['features'])
+        self.df_dynamic_csi = csi_stat(self.df,self.params['periodo_id'],self.params['features'])
+        self.df_static_csi  = csi_stat(self.df,self.params['periodo_id'],self.params['features'],self.params['training_period'])
+        # self.df_dynamic_csi = dynamic_csi_stat(self.df,self.params['periodo_id'],self.params['features'])
 
         population = self.df.groupby([self.params['periodo_id']]).agg({self.params['cliente_id']: "count"}).T
         new_df_csi = self.df_dynamic_csi.drop(columns=["quantile", "status", "status_2"])
@@ -169,6 +173,7 @@ class FeatureAnalysis:
         self.dict_runs['estabilidad'] = True
         dict_to_return = {
             'dynamic_csi': self.df_dynamic_csi,
+            'static_csi': self.df_static_csi,
             'weight_csi': self.new_df_csi,
             'low_variability': self.df_low_variability,
             'mean':self.df_stability['mean'],
@@ -255,8 +260,8 @@ class FeatureAnalysis:
 
         path = f'./reporte_consolidado_{self.params["nombre_reporte"]}.xlsx'
         with pd.ExcelWriter(path) as writer:
-            names = ['features','dynamic_csi',*self.df_stability.keys()]
-            for i, table in enumerate([df_out,self.df_dynamic_csi,*self.df_stability.values()]):
+            names = ['features','dynamic_csi','static_csi',*self.df_stability.keys()]
+            for i, table in enumerate([df_out,self.df_dynamic_csi,self.df_static_csi,*self.df_stability.values()]):
                 table.to_excel(writer, sheet_name=f'{names[i]}', index=True)
         return df_out
     

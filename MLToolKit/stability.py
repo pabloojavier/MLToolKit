@@ -38,22 +38,28 @@ def stability_stat(
         'under_five_std':df_under_five_std,
     }
 
-def dynamic_csi_stat(
+def csi_stat(
             df: pd.DataFrame,
             timestamp_col: str,
             features : list,
+            training_period = None,
         ) -> pd.DataFrame:
-    cols_to_analyze = features
+
+    if training_period is not None:
+        csi_type = 'static'
+    else:
+        csi_type = 'dynamic'
 
     df_append = pd.DataFrame()
-
-    for feature in cols_to_analyze:
+    for feature in features:
         df_feat = df[[feature, timestamp_col]].dropna()
+        if csi_type == 'static':
+            df_feat.loc[df_feat[timestamp_col].isin(training_period), timestamp_col] = max(training_period)
         n_quantiles = _get_number_of_quantiles(df_feat, feature)
         if n_quantiles == 0:
             continue
         df_feat = _get_quantile_distribution(df_feat, feature, n_quantiles,timestamp_col)
-        csi = _calculate_csi(df_feat, feature, n_quantiles)
+        csi = _calculate_csi(df_feat, feature, n_quantiles,csi_type)
         df_append = pd.concat([df_append, csi], axis=0)
 
     df_append = _assign_stability(df_append)
@@ -79,12 +85,12 @@ def get_features_with_low_variability(
             pass
     return features_low_variability
 
-def _calculate_csi(df: pd.DataFrame, col: str, n_quantiles: int) -> float:
+def _calculate_csi(df: pd.DataFrame, col: str, n_quantiles: int, type:str = 'dynamic') -> float:
     df_out = df.copy()
 
     for i in range(df.shape[1] - 1):
         actual = df.iloc[:, i + 1] + 10e-20
-        expected = df.iloc[:, i] + 10e-20
+        expected = df.iloc[:, i if type == 'dynamic' else 0] + 10e-20
         df_out.iloc[:, i + 1] = (actual - expected) * np.log(actual / expected)
 
     df_out = df_out.drop(columns=df.columns[0])
