@@ -82,7 +82,8 @@ class FeatureAnalysis:
             'fill_na': -9e8,
             'threshold_correlation': 0.5,
             'correlation_method': 'pearson',
-            'correlation_metric': 'ks'
+            'correlation_metric': 'ks',
+            'training_period' : None
         }
         for key, value in default_params.items():
             if key not in self.params:
