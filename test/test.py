@@ -6,11 +6,11 @@ sys.path.append(credentials['path'])
 from data import create_simulated_data
 
 df = create_simulated_data(n_features=10,n_rows=1_000)
-df['event_time'] = df['event_time'].astype(str)
+df['event_time'] = pd.to_datetime(df['event_time'])
 features = [col for col in df.columns if col not in ['target','event_time','cliente_id']]
-nan_fraction = 0.1
-nan_indices = np.random.choice(df.index, size=int(len(df) * nan_fraction), replace=False)
+nan_fraction = 0.27
 for col in features:
+  nan_indices = np.random.choice(df.index, size=int(len(df) * nan_fraction), replace=False)
   df.loc[nan_indices, col] = np.nan
 
 parametros_analisis = {
@@ -26,6 +26,7 @@ parametros_analisis = {
   'fill_na' : -9e8, 
   'threshold_correlation' : 0.5,
   'correlation_metric' : 'aucpr', # Opciones: iv,ks,roc,aucpr
+  'training_period' : pd.date_range('2022-01-01', '2022-08-01', freq='MS'),
 }
 
 from MLToolKit.feature_analysis import FeatureAnalysis
