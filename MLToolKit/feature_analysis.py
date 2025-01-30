@@ -9,7 +9,7 @@ class FeatureAnalysis:
     def __init__(
             self,
             df : pd.DataFrame,
-            params : dict[str, Any]
+            params : Dict[str, Any]
     ):
         """
         Initializes the feature analysis with the given dataframe and parameters.
