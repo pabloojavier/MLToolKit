@@ -1,24 +1,15 @@
 import numpy as np
 import pandas as pd
 from sklearn import tree
-from sklearn.tree import DecisionTreeClassifier
-from scipy.stats import ks_2samp
 from sklearn.metrics import roc_auc_score,roc_curve,average_precision_score
-import plotly.express as px
-
-# import warnings
-# warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
-import shap
 
 import xgboost as xgb
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from pathlib import Path
 
 import os
 import shutil
 import base64
-import sys
 
 from typing import List, Tuple
 
@@ -294,7 +285,7 @@ def _counter_vars(variables):
 def _trainModel(X, y, 
                feature,
                params,
-               model=DecisionTreeClassifier
+               model=tree.DecisionTreeClassifier
               ):
   
     clf = model(**params)
@@ -313,7 +304,7 @@ def _ks_statistic(y_true, y_pred):
     ks = max(tpr - fpr)
     return ks
 
-def xgboost_analysis(df, target_value, features, threshold_ks=0.01, threshold_roc=0.501,fillna=-9e8,params={}):
+def xgboost_analysis(df, target_value, features,fillna=-9e8,params={}):
   results = []
   it = 0
   for feature in features:
