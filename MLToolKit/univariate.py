@@ -113,7 +113,6 @@ def _calculateStats(df, feature, target_model):
     return pd.concat([summary_df, add_row]).fillna(" ").reset_index(drop=True)
 
 def _plotBarBadRateWoE(summaries, studyFeature):
-    
     _checkFolder()
     summary = summaries[studyFeature].copy()
     x = summary.iloc[:-1, :]["Categoria"].astype(str)
@@ -149,8 +148,6 @@ def _createReport(df_table, dict_summaries, report_name='report'):
     """
     Create a HTML report that show the prediction univariate for
     each variable.
-    
-        
     """
     df_html = df_table.to_html()
 
@@ -177,7 +174,6 @@ def _createReport(df_table, dict_summaries, report_name='report'):
     data_uri = _loadPlot(image_path)
     image_path = _getPlot(pattern="iv_features.png")
     data_uri_iv = _loadPlot(image_path)
-    # Se inicializa el documento html
     
     html_string = f"""
         <html lang="en">

@@ -71,6 +71,7 @@ class FeatureAnalysis:
         assert 'target_name' in params.keys(), "El parámetro 'target_name' debe estar presente en los parámetros."
         assert 'cliente_id' in params.keys(), "El parámetro 'cliente_id' debe estar presente en los parámetros."
         assert 'periodo_id' in params.keys(), "El parámetro 'periodo_id' debe estar presente en los parámetros."
+        assert params['correlation_metric'].lower() in ['ks', 'roc', 'iv', 'aucpr'], "Metric must be one of ['ks', 'roc', 'iv', 'aucpr']"
         assert pd.api.types.is_datetime64_any_dtype(df[params['periodo_id']]), f"La columna {params['periodo_id']} debe ser de tipo datetime. Ejecutar df['{params['periodo_id']}'] = pd.to_datetime(df['{params['periodo_id']}'])"
         assert all(col in df.columns for col in [params['target_name'], params['cliente_id'], params['periodo_id']]), f"Las columnas {params['target_name']}, {params['cliente_id']} y {params['periodo_id']} deben estar presentes en el dataframe."
 
@@ -83,7 +84,8 @@ class FeatureAnalysis:
             'threshold_correlation': 0.5,
             'correlation_method': 'pearson',
             'correlation_metric': 'ks',
-            'training_period' : None
+            'training_period' : None,
+            'univ_params' : {"random_state": 42, "max_depth": 2, "min_samples_leaf": 0.05},
         }
         for key, value in default_params.items():
             if key not in self.params:
@@ -92,8 +94,6 @@ class FeatureAnalysis:
         exclude_cols = [params['target_name'],params['cliente_id'],params['periodo_id']]
         self.df : pd.DataFrame = df[exclude_cols+params['features']]
         self.params['exclude_cols'] = exclude_cols
-        self.params['univ_params'] = {"random_state": 42, "max_depth": 2, "min_samples_leaf": 0.05}
-        self.params['correlation_method'] = 'pearson'
 
         self.dict_runs = {
             'univariado': False,
@@ -109,24 +109,26 @@ class FeatureAnalysis:
             pd.DataFrame
         """
         df_univ = univariateIV(
-            self.df, 
-            model_params = self.params['univ_params'],
-            report_name = f'reporte_univariado_{self.params["nombre_reporte"]}.html',
-            exclude_cols = self.params['exclude_cols'],
-            target_model = self.params['target_name'],
-            fill_na = self.params['fill_na']
+            self.df,
+            model_params=self.params['univ_params'],
+            report_name=f'reporte_univariado_{self.params["nombre_reporte"]}.html',
+            exclude_cols=self.params['exclude_cols'],
+            target_model=self.params['target_name'],
+            fill_na=self.params['fill_na']
         )
         
-        xgboost_params = {}
-        xgboost_params['objective'] = 'binary:logistic'
-        xgboost_params['eval_metric'] = 'logloss'
-        xgboost_params.update(self.params['xgboost_params'])
+        xgboost_params = {
+            'objective' : 'binary:logistic',
+            'eval_metric' : 'logloss',
+            **self.params['xgboost_params']
+        }
+        
         df_xgboost = xgboost_analysis(
-            self.df, 
-            self.params['target_name'],
-            self.params['features'],
-            self.params['fill_na'],
-            params = xgboost_params
+            df=self.df,
+            target_value=self.params['target_name'],
+            features=self.params['features'],
+            fillna=self.params['fill_na'],
+            params=xgboost_params
         )
 
         self.df_univ = pd.merge(
@@ -157,19 +159,18 @@ class FeatureAnalysis:
         self.df_stability = stability_stat(self.df,self.params['periodo_id'],self.params['features'])
         self.df_dynamic_csi = csi_stat(self.df,self.params['periodo_id'],self.params['features'])
         self.df_static_csi  = csi_stat(self.df,self.params['periodo_id'],self.params['features'],self.params['training_period'])
-        # self.df_dynamic_csi = dynamic_csi_stat(self.df,self.params['periodo_id'],self.params['features'])
 
         population = self.df.groupby([self.params['periodo_id']]).agg({self.params['cliente_id']: "count"}).T
         new_df_csi = self.df_dynamic_csi.drop(columns=["quantile", "status", "status_2"])
         periods_csi = [i for i in list(new_df_csi.columns)]
         population = population[periods_csi]
-
         weights = population.loc[self.params['cliente_id'], :].values / sum(population.loc[self.params['cliente_id'], :].values)
         new_df_csi = (new_df_csi * weights).sum(axis=1) / sum(weights)
         self.new_df_csi = new_df_csi.to_frame().reset_index().rename(columns={"index":"feature",0:"weight_csi"})
 
         df_low_variability = get_features_with_low_variability(self.df,self.params['features'],self.params['threshold_low_variabilty'])
         self.df_low_variability = pd.DataFrame(df_low_variability,columns=['feature']).assign(low_variability = 'True')
+        
         self.dict_runs['estabilidad'] = True
         dict_to_return = {
             'dynamic_csi': self.df_dynamic_csi,
@@ -205,11 +206,6 @@ class FeatureAnalysis:
         metric = self.params['correlation_metric']
         threshold_correlation = self.params['threshold_correlation']
         correlation_method = self.params['correlation_method']
-
-
-        metric = metric.lower()
-        if metric not in ['ks','roc','iv','aucpr']:
-            raise ValueError("Metric must be one of ['ks','roc','iv','aucpr]")
 
         familias = set([col.split('_')[0] for col in self.params['features'] if '_' in col])
 
