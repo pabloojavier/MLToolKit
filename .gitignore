@@ -1,5 +1,5 @@
 *.pyc
-CREDENTIALS.py
+credentials.py
 MLToolKit.egg-info
 __pycache__
 *.parquet

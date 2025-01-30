@@ -187,61 +187,55 @@ def _createReport(df_table, dict_summaries, report_name='report'):
     image_path = _getPlot(pattern="iv_features.png")
     data_uri_iv = _loadPlot(image_path)
     # Se inicializa el documento html
-    html_string = (
-        """
+    
+    html_string = f"""
         <html lang="en">
         <head>
-          <title>Reporte de Information Value</title>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-          <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-          <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+            <title>Reporte de Information Value</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
         </head>
         <body>
         <div class="container">
-          <h1>Sección 1: Resultados Preliminares</h1>
-          <a id="summary"></a>
-          <p>En la siguientes pestañas podras encontrar información relacionada al dataset utilizado e nivel de predictivilidad de las variables según el Information Value (IV).</p>
+            <h1>Sección 1: Resultados Preliminares</h1>
+            <a id="summary"></a>
+            <p>En la siguientes pestañas podras encontrar información relacionada al dataset utilizado e nivel de predictivilidad de las variables según el Information Value (IV).</p>
         
-          <ul class="nav nav-tabs">
+            <ul class="nav nav-tabs">
             <li class="active"><a data-toggle="tab" href="#home">Tabla IV</a></li>
             <li><a data-toggle="tab" href="#menu1">Cant. de Variables</a></li>
             <li><a data-toggle="tab" href="#menu2">Predictibilidad por Familia</a></li>
             <li><a data-toggle="tab" href="#menu3">Top 5 por Familia</a></li>
-          </ul>
+            </ul>
         
-          <div class="tab-content">
+            <div class="tab-content">
             <div id="home" class="tab-pane fade in active">
-              <h3>Top 10 de variables con mayor nivel predictivo</h3>
-              <p>Tabla de resumen ordenada de mayor a menor con las variables mas predictivas.</p>
-              """ + df_html + """
+                <h3>Top 10 de variables con mayor nivel predictivo</h3>
+                <p>Tabla de resumen ordenada de mayor a menor con las variables mas predictivas.</p>
+                {df_html}
             </div>
             <div id="menu1" class="tab-pane fade">
-              <h3>Cant. de Variables</h3>
-              <p>Cantidad de variables analizadas agrupadas por familia.</p>
-              """    
-              + '<img src="data:image/png;base64,{0}" class="center">'.format(data_uri) + 
-              """
+                <h3>Cant. de Variables</h3>
+                <p>Cantidad de variables analizadas agrupadas por familia.</p>
+                <img src="data:image/png;base64,{data_uri}" class="center">
             </div>
             <div id="menu2" class="tab-pane fade">
-              <h3>Predictibilidad por Familia</h3>
-              <p>Predictibilidad de las variables según su information value agrupada por Familia. La línea roja señala el mínimo de predictibilidad exigido (0.02).</p>
-              """    
-              + '<img src="data:image/png;base64,{0}" class="center">'.format(data_uri_iv) +
-            """
+                <h3>Predictibilidad por Familia</h3>
+                <p>Predictibilidad de las variables según su information value agrupada por Familia. La línea roja señala el mínimo de predictibilidad exigido (0.02).</p>
+                <img src="data:image/png;base64,{data_uri_iv}" class="center">
             </div>
             <div id="menu3" class="tab-pane fade">
-              <h3>Top 5 por Familia</h3>
-              <p>Top 5 predictibilidad agrupada por familia. La línea roja señala el mínimo de predictibilidad exigido (0.02).</p>
-              """    
-              + top5_famility.replace('<table border="1" class="dataframe">', '<table class="table table-striped">') +
-              """
+                <h3>Top 5 por Familia</h3>
+                <p>Top 5 predictibilidad agrupada por familia. La línea roja señala el mínimo de predictibilidad exigido (0.02).</p>
+                {top5_famility.replace('<table border="1" class="dataframe">', '<table class="table table-striped">')}
+                
             </div>
         <hr class="solid">
         <h1>Sección 2: Estadísticos por Variables</h1>
     """
-    )
 
     for it, feature_name in enumerate(features_names):
         df_summary = dict_summaries[feature_name].copy()
@@ -255,56 +249,39 @@ def _createReport(df_table, dict_summaries, report_name='report'):
         image_path_2 = _getPlot(f"{feature_name}_treeplot.png")
         data_uri_tree = _loadPlot(image_path_2)
         
-        html_string = (
-            html_string
-            + """
-          <h3><b>ID: """
-            + str(it)
-            + '''</b></h3>
-          <a id="'''
-            + feature_name
-            + """"></a>
-          <h3><b>Variable: """
-            + feature_name
-            + """</b></h3>
-          <br>
-          <center>
-            """
-            + df_summary
-            + """
-          </center>
-          <ul class="nav nav-tabs">
-            <li class="active"><a data-toggle="tab" href="#menuplot"""+feature_name+"""">BarPlots</a></li>
-            <li><a data-toggle="tab" href="#menutree"""+feature_name+"""">Árbol</a></li>
-          </ul>
-        
-          <div class="tab-content">
-            <div id="menuplot"""+feature_name+"""" class="tab-pane fade in active">
-              <h3>Gráficos de BadRate e Information Value</h3>
-              <p>Comportamiento de las categorías con diferentes intervalos.</p>
-              """ + '<img src="data:image/png;base64,{0}" class="center">'.format(data_uri_plot) + """
-            </div>
-            <div id="menutree"""+feature_name+"""" class="tab-pane fade">
-              <h3>Árbol obtenido</h3>
-              <p>Árbol generado durante el entrenamiento.</p>
-              """+ '<img src="data:image/png;base64,{0}" class="center">'.format(data_uri_tree) + """
-            </div>
-          <hr class="solid">"""
-        )
+        html_string += f"""
+        <h3><b>ID: {it}</b></h3>
+        <a id="{feature_name}"></a>
+        <h3><b>Variable: {feature_name}</b></h3>
+        <br>
+        <center>
+        {df_summary}
+        </center>
+        <ul class="nav nav-tabs">
+        <li class="active"><a data-toggle="tab" href="#menuplot{feature_name}">BarPlots</a></li>
+        <li><a data-toggle="tab" href="#menutree{feature_name}">Árbol</a></li>
+        </ul>
 
-        html_string = (
-            html_string
-            + """
-          <br>
-          <a href="#summary" class="btn btn-info" role="button">VOLVER AL INICIO</a>
-          <hr class="solid">
+        <div class="tab-content">
+        <div id="menuplot{feature_name}" class="tab-pane fade in active">
+            <h3>Gráficos de BadRate e Information Value</h3>
+            <p>Comportamiento de las categorías con diferentes intervalos.</p>
+            <img src="data:image/png;base64,{data_uri_plot}" class="center">
+        </div>
+        <div id="menutree{feature_name}" class="tab-pane fade">
+            <h3>Árbol obtenido</h3>
+            <p>Árbol generado durante el entrenamiento.</p>
+            <img src="data:image/png;base64,{data_uri_tree}" class="center">
+        </div>
+        <hr class="solid">
+        <br>
+        <a href="#summary" class="btn btn-info" role="button">VOLVER AL INICIO</a>
+        <hr class="solid">
         """
-        )
 
-    html_string = html_string + """
+    html_string += """
     </div></body></html>"""
     f = open(f"./{report_name}", "w")
-    # f = open(report_name,'w')
     f.write(html_string)
     f.close()
 

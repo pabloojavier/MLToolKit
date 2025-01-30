@@ -1,9 +1,9 @@
 import sys
 import pandas as pd
 import numpy as np
-from CREDENTIALS import credentials
+from credentials import credentials
 sys.path.append(credentials['path'])
-from data.data import create_simulated_data
+from data import create_simulated_data
 
 df = create_simulated_data(n_features=10,n_rows=1_000)
 df['event_time'] = df['event_time'].astype(str)
