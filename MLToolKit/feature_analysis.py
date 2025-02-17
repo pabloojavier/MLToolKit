@@ -272,11 +272,12 @@ class FeatureAnalysis:
 
     def dbfs_save_files(self):
         import mlflow
+        import time
         mlflow.sklearn.autolog(disable=True)
         mlflow.xgboost.autolog(disable=True)
         mlflow.statsmodels.autolog(disable=True)
-
-        mlflow.set_experiment(self.params['experiment_name'])
+        time_id = time.strftime('%Y-%m-%d_%H-%M-%S').replace('-','')
+        mlflow.set_experiment(self.params['experiment_name']+'_'+time_id)
         
         nombres = {
             'univariado': f'reporte_univariado_{self.params["nombre_reporte"]}.html',
