@@ -213,7 +213,7 @@ class FeatureAnalysis:
         variables_descartadas = []
         
         for familia in familias:
-            columnas_familia = [col for col in self.df.columns if col.startswith(familia)]
+            columnas_familia = [col for col in self.df.columns if col.split('_')[0] == familia]
             df_familia = self.df[columnas_familia]
             correlacion = df_familia.corr(method=correlation_method).abs()
             sets_correlacionados = []
