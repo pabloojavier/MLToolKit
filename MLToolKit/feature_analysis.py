@@ -86,6 +86,7 @@ class FeatureAnalysis:
             'correlation_metric': 'ks',
             'training_period' : None,
             'univ_params' : {"random_state": 42, "max_depth": 2, "min_samples_leaf": 0.05},
+            'verbose' : True
         }
         for key, value in default_params.items():
             if key not in self.params:
@@ -114,7 +115,8 @@ class FeatureAnalysis:
             report_name=f'reporte_univariado_{self.params["nombre_reporte"]}.html',
             exclude_cols=self.params['exclude_cols'],
             target_model=self.params['target_name'],
-            fill_na=self.params['fill_na']
+            fill_na=self.params['fill_na'],
+            verbose=self.params['verbose'],
         )
         
         xgboost_params = {
@@ -128,7 +130,8 @@ class FeatureAnalysis:
             target_value=self.params['target_name'],
             features=self.params['features'],
             fillna=self.params['fill_na'],
-            params=xgboost_params
+            params=xgboost_params,
+            verbose = self.params['verbose'],
         )
 
         self.df_univ = pd.merge(

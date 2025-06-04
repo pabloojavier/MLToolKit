@@ -27,12 +27,13 @@ parametros_analisis = {
   'threshold_correlation' : 0.5,
   'correlation_metric' : 'aucpr', # Opciones: iv,ks,roc,aucpr
   'training_period' : pd.date_range('2022-01-01', '2022-08-01', freq='MS'),
+  'verbose' : True,
 }
 
 from MLToolKit.feature_analysis import FeatureAnalysis
 fa = FeatureAnalysis(df,parametros_analisis)
 fa.univariado()
 fa.estabilidad()
-fa.correlacion_por_metrica()
-fa.consolidar_analisis()
-fa.save_files()
+# fa.correlacion_por_metrica()
+# fa.consolidar_analisis()
+# fa.save_files()

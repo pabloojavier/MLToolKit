@@ -300,11 +300,12 @@ def _ks_statistic(y_true, y_pred):
     ks = max(tpr - fpr)
     return ks
 
-def xgboost_analysis(df, target_value, features,fillna=-9e8,params={}):
+def xgboost_analysis(df, target_value, features,fillna=-9e8,params={},**kwargs):
   results = []
   it = 0
   for feature in features:
-      print(f"Calculating KS/ROC: {(it+1):>4}/{len(features):<4} {feature:<80}",end="\r",flush=True)
+      if kwargs.get('verbose', True):
+            print(f"Calculating KS/ROC: {(it+1):>4}/{len(features):<4} {feature:<80}",end="\r",flush=True)
       X = df[[feature]].fillna(fillna)
       y = df[target_value].astype(int)
       
@@ -323,7 +324,8 @@ def xgboost_analysis(df, target_value, features,fillna=-9e8,params={}):
           'aucpr' : auc
       })
       it+=1
-  print()
+  if kwargs.get('verbose', True):
+    print()
   results_df = pd.DataFrame(results)
   return results_df
 
@@ -333,6 +335,7 @@ def univariateIV(dataset,
                  exclude_cols = ['mach_id', 'event_time', 'target_value'], 
                  target_model = 'target_value',
                  fill_na = -9e8,
+                 **kwargs
                 ):
     valid_cols = [i for i in dataset.columns if i not in exclude_cols+[target_model]]
     dict_summaries = {}
@@ -352,7 +355,8 @@ def univariateIV(dataset,
     
     top_df = pd.DataFrame()
     for it,feature in enumerate(valid_cols):
-        print(f"Calculating IV: {(it+1):>4}/{len(valid_cols):<4} {feature:<80}",end="\r",flush=True)
+        if kwargs.get('verbose', True):
+            print(f"Calculating IV: {(it+1):>4}/{len(valid_cols):<4} {feature:<80}",end="\r",flush=True)
         X = dataset.loc[:, [feature]].fillna(fill_na)
         
         clf = _trainModel(X, y, feature=feature, params=model_params)
@@ -372,8 +376,9 @@ def univariateIV(dataset,
         IV = dict_summaries[feature].iloc[-1, -1]
         top_new_row = pd.DataFrame({'Feature':feature, 'Information Value':IV}, index=[0])
         top_df = pd.concat([top_df, top_new_row])    
-    print()
-    print(f"Features with not enough variability: {len(features_errors)}")
+    if kwargs.get('verbose', True):
+        print()
+        print(f"Features with not enough variability: {len(features_errors)}")
 
     top_df = top_df.sort_values(by='Information Value', ascending=False).reset_index(drop=True)
     boxplot = pd.DataFrame()
