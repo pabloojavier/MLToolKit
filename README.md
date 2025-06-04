@@ -39,6 +39,7 @@ parametros = {
   'threshold_correlation' : 0.5,
   'correlation_metric' : 'aucpr', # Opciones: iv,ks,roc,aucpr
   'training_period' : pd.date_range('2022-01-01', '2022-08-01', freq='MS'),
+  'verbose' : True
 }
 
 
@@ -66,6 +67,7 @@ fa.save_files()
 - threshold_correlation: Umbral para eliminar variables con alta correlación familiar.
 - correlation_metric: Métrica para escoger que variable seleccionar en caso de tener alta correlación. Opciones: iv,ks,roc,aucpr.
 - training_period: Rango de entrenamiento para el CSI estático. En caso de no tener, especificar `None`.
+- verbose: Booleano que indica si se imprimen mensajes de progreso en la consola.
 
 ## Contribuciones
 
